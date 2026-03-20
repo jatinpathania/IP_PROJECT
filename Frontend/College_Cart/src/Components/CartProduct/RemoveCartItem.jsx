@@ -1,14 +1,15 @@
 import axios from 'axios'
-import React, { useRef,useEffect, useContext } from 'react'
+import React, { useRef, useEffect } from 'react'
 const backend_url = import.meta.env.VITE_BACKEND_API_URL;
 import toast, { Toaster } from 'react-hot-toast';
 import styles from "./remove.module.css"
 import { AnimatePresence, motion } from 'framer-motion';
 import { getToken } from '../../util/tokenService';
-import { UserDataContext } from '../Header/context';
+import { useDispatch } from 'react-redux';
+import { updateCart } from '../Redux/Slice';
 
-const RemoveCartItem = ({ isOpen, onClose, cartItemId,setCartItem,cartItem }) => {
-   const {setTotalQuantity} = useContext(UserDataContext)
+const RemoveCartItem = ({ isOpen, onClose, cartItemId, setCartItem }) => {
+   const dispatch = useDispatch();
 
    const dialogRef = useRef(null);
      useEffect(() => {
@@ -35,12 +36,13 @@ const RemoveCartItem = ({ isOpen, onClose, cartItemId,setCartItem,cartItem }) =>
             "Authorization":`Bearer ${token}`
           }
         });
-        setCartItem(res.data.item); 
+        const items = res.data.item || [];
+        setCartItem(items);
+        dispatch(updateCart({ item: items }));
       } catch (error) {
           console.log(error);
       }
     };
-    setTotalQuantity(cartItem.length)
     // console.log(cartItem.length)
      
     const handleDeleteProduct = async () => {
