@@ -5,16 +5,17 @@ import styles from "./CartProduct.module.css"
 import ProductPriceDetails from './ProductPriceDetails';
 import toast, { Toaster } from 'react-hot-toast';
 import axios from 'axios';
-import React, { useContext,useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import { getToken } from '../../util/tokenService';
 import RemoveCartItem from './RemoveCartItem';
-import { UserDataContext } from '../Header/context';
+import { useDispatch } from 'react-redux';
+import { updateCart } from '../Redux/Slice';
 
 const backend_url = import.meta.env.VITE_BACKEND_API_URL;
 
 const CartProduct = () => {
-  
+  const dispatch = useDispatch();
 
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ const CartProduct = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const textName = (text) => {
-    if(!text) return "";
+    if (!text) return "";
     const words = text.split(' ');
     return words.length > 10 ? words.slice(0, 10).join(' ') + '...' : text;
   };
@@ -36,8 +37,9 @@ const CartProduct = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      // console.log(res.data.item)
-      setCartItems(res.data.item);
+      const items = res.data.item || [];
+      setCartItems(items);
+      dispatch(updateCart({ item: items }));
     } catch (error) {
       console.log(error);
     } finally {
@@ -54,31 +56,32 @@ const CartProduct = () => {
       const updatedQuantity = action === "increase" ? item.quantity + 1 : item.quantity - 1;
 
       if (updatedQuantity < 1 || updatedQuantity > item.productQuantity) return;
-  
+
       const data = { quantity: updatedQuantity, totalPrice: updatedQuantity * item.price };
-      const res = await axios.put(`${backend_url}/${item._id}/update-quantity-filed`, data);
-    //  console.log(res.data.updateCartItemQunatity)
-    
+      await axios.put(`${backend_url}/${item._id}/update-quantity-filed`, data);
+
       setCartItems((prevItems) => {
-        return prevItems.map((cartItem) => 
-          cartItem._id === item._id 
-            ? { ...cartItem, quantity: updatedQuantity, totalPrice: updatedQuantity * cartItem.price } 
+        const newItems = prevItems.map((cartItem) =>
+          cartItem._id === item._id
+            ? { ...cartItem, quantity: updatedQuantity, totalPrice: updatedQuantity * cartItem.price }
             : cartItem
         );
+        dispatch(updateCart({ item: newItems }));
+        return newItems;
       });
-  
-      if(action === "increase"){
+
+      if (action === "increase") {
         toast.success("Quantity increased");
-      } else if(action === "decrease") {
+      } else if (action === "decrease") {
         toast.success("Quantity decreased");
       }
-  
+
     } catch (error) {
       console.error("Error updating quantity:", error);
       toast.error("Failed to update quantity");
     }
   };
-  
+
 
   const handleOpenDeleteDialog = (id) => {
     setCartProductDeleteId(id);
@@ -87,7 +90,7 @@ const CartProduct = () => {
 
   return (
     <>
-      <Header Header showSearch={false} showMiddleHeader={true} isProductsPage={false}/>
+      <Header Header showSearch={false} showMiddleHeader={true} isProductsPage={false} />
       <div className={styles.header}>
         <div className={styles.container}>
           <div className={styles.cart}>
@@ -114,7 +117,7 @@ const CartProduct = () => {
                     />
                     <div className={styles.quantityControls}>
                       <button
-                        onClick={() => handleQuantityUpdate(item, "decrease")}  
+                        onClick={() => handleQuantityUpdate(item, "decrease")}
                         disabled={item.quantity <= 1}
                         className={`${styles.button} ${item.quantity <= 1 ? styles.buttonDisabled : styles.buttonEnabled}`}
                       >
@@ -169,17 +172,17 @@ const CartProduct = () => {
               ))
             )}
           </div>
-          <ProductPriceDetails cartItem={cartItems}  />
+          <ProductPriceDetails cartItem={cartItems} />
         </div>
       </div>
       <RemoveCartItem
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         cartItemId={cartProductDeleteId}
-        cartItem={cartItems} setCartItem={setCartItems}
+        setCartItem={setCartItems}
       />
-      
-      
+
+
       <div className={styles.cartFooter}><Footer /></div>
       <Toaster />
     </>
