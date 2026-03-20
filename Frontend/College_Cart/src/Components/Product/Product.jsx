@@ -73,7 +73,10 @@ const Product = () => {
   const { searchQuery, products } = useContext(UserDataContext);
    console.log(searchQuery)
   const dispatch = useDispatch();
-    dispatch({type: "cart/initialize"});
+    
+    useEffect(() => {
+      dispatch({type: "cart/initialize"});
+    }, [dispatch]);
 
     useEffect(() => {
       window.scrollTo(0, 0);
@@ -91,36 +94,28 @@ const Product = () => {
        dispatch(addToCart(product1));
        const totalQuantity = store.getState().cart.totalQuantity;
 
-       setTimeout(() => {
-         const updatedState = store.getState().cart.itemList;
-       
-         const storeItem = updatedState.find(item => item._id === product1._id);
-         // console.log(storeItem)
-         if (storeItem) {
-           const cartItem = {
-             productId: storeItem._id,
-             name: storeItem.name,
-             brand: storeItem.brand,
-             category: storeItem.category,
-             selectHostel: storeItem.selectHostel,
-             hostleName: storeItem.hostleName,
-             roomNumber: storeItem.roomNumber,
-             dayScholarContectNumber: storeItem.dayScholarContectNumber,
-             price: storeItem.price,
-             prevPrice: storeItem.prevPrice,
-             totalPrice: storeItem.totalPrice,
-             image: storeItem.image,
-             // description: storeItem.description,
-             productQuantity: storeItem.productQuantity,
-             quantity: storeItem.quantity,
-             totalQuantity: totalQuantity
-           };
-   
-           dispatch(cartAdd(cartItem));
-          //  console.log("Statring dispatch");
-           dispatch({type: "cart/initialize"});
-         }
-       }, 1000);
+       const updatedState = store.getState().cart.itemList;
+       const storeItem = updatedState.find(item => item._id === product1._id);
+       if (storeItem) {
+         const cartItem = {
+           productId: storeItem._id,
+           name: storeItem.name,
+           brand: storeItem.brand,
+           category: storeItem.category,
+           selectHostel: storeItem.selectHostel,
+           hostleName: storeItem.hostleName,
+           roomNumber: storeItem.roomNumber,
+           dayScholarContectNumber: storeItem.dayScholarContectNumber,
+           price: storeItem.price,
+           prevPrice: storeItem.prevPrice,
+           totalPrice: storeItem.totalPrice,
+           image: storeItem.image,
+           productQuantity: storeItem.productQuantity,
+           quantity: storeItem.quantity,
+           totalQuantity: totalQuantity
+         };
+         dispatch(cartAdd(cartItem));
+       }
      };
   return (
     <>
